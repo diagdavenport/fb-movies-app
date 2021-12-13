@@ -38,8 +38,12 @@ bower_components
 build/Release
 
 # Dependency directories
+movies-ui/node_modules/
 node_modules/
 jspm_packages/
+
+# Images
+movies_backend/race/
 
 # TypeScript v1 declaration files
 typings/
