@@ -62,7 +62,7 @@ Any changes made to the frontend or backend code will require a manual deploymen
 1. Rebuild the frontend
 2. Go to the S3 repo and manually upload everything from `/movies-ui/dist/movies-ui` to the S3 repo
 
-### Why to do when the IP of the EC2 Instance change?
+### What to do when the IP of the EC2 Instance change?
 
 - Since there's no CI/CD or other DevOps tool set up, When the EC2 instance’s IP address changed, we need to manually update it to both frontend and backend code.
 - Frontend:
