@@ -46,6 +46,22 @@ Survey platform to study and analyze in-group algorithmic bias in social network
 
 ### Setup instructions can be found inside the UI/Backend folders
 
+
+### Deployment Instructions
+
+Any changes made to the frontend or backend code will require a manual deployment to make those changes in effect, because currnently there's no CI/CD set up.  
+
+#### Backend
+
+1. Go to the running EC2 instance.
+2. Pull the correct branch.
+3. Restart the Apache server (`sudo service apache2 restart`)
+
+#### Frontend
+
+1. Rebuild the frontend
+2. Go to the S3 repo and manually upload everything from `/movies-ui/dist/movies-ui` to the S3 repo
+
 ### Why to do when the IP of the EC2 Instance change?
 
 - Since there's no CI/CD or other DevOps tool set up, When the EC2 instance’s IP address changed, we need to manually update it to both frontend and backend code.
