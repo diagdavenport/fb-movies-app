@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-==mm^f2gt7@x+_%a3$1z1=-t(=*fg9#lza+u@u%a1u0w&j!f38
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['3.214.184.119','localhost']
+ALLOWED_HOSTS = ['3.214.184.119','localhost', '44.204.168.187']
 
 
 # Application definition
@@ -123,5 +123,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
-    "http://fb-movies-ui.s3-website-us-east-1.amazonaws.com"
+    "http://fb-movies-ui.s3-website-us-east-1.amazonaws.com",
+    "http://fb-movies-ui-test.s3-website-us-east-1.amazonaws.com",
 ]
