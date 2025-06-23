@@ -216,20 +216,144 @@ def createUserMovieNamePattern(id,timed):
         else:
             movies_count = model_to_dict(Dynamic.objects.first())['total_movies_time_2']
         randomMovieslist = random.sample(range(1,movies_count+1), movies_count)
-        raceProbabilities = {'White':64,'Hispanic':22,'Black':14,'Asian':0}
+        # Updated distribution: Race - 20% Black, 25% Hispanic, 55% White; Gender - 60% Female, 40% Male
+        raceProbabilities = {'White': 55, 'Hispanic': 25, 'Black': 20, 'Asian': 0}
+        genderProbabilities = {'Female': 60, 'Male': 40}
+        
+        # Calculate targets with proper rounding
+        total_names_needed = movies_count
+        female_target = int(total_names_needed * genderProbabilities['Female'] / 100)
+        male_target = total_names_needed - female_target
+        
+        # Calculate race targets with proper rounding handling
+        white_target = round(total_names_needed * raceProbabilities['White'] / 100)
+        hispanic_target = round(total_names_needed * raceProbabilities['Hispanic'] / 100)
+        black_target = round(total_names_needed * raceProbabilities['Black'] / 100)
+        asian_target = 0  # Asian is 0% in our distribution
+        
+        # Adjust for rounding errors to ensure total equals movies_count
+        total_calculated = white_target + hispanic_target + black_target + asian_target
+        if total_calculated != total_names_needed:
+            # Adjust the largest group (White) to compensate for rounding
+            white_target += (total_names_needed - total_calculated)
+        
+        # Separate names by race and gender
+        race_gender_pools = {
+            'White': {'Female': [], 'Male': []},
+            'Hispanic': {'Female': [], 'Male': []},
+            'Black': {'Female': [], 'Male': []},
+            'Asian': {'Female': [], 'Male': []}
+        }
+        
+        # Populate pools
+        for name in whiteNames:
+            race_gender_pools['White'][name['gender']].append(name)
+        for name in hispanicNames:
+            race_gender_pools['Hispanic'][name['gender']].append(name)
+        for name in blackNames:
+            race_gender_pools['Black'][name['gender']].append(name)
+        for name in asianNames:
+            race_gender_pools['Asian'][name['gender']].append(name)
+        
+        # Shuffle all pools
+        for race in race_gender_pools:
+            for gender in race_gender_pools[race]:
+                random.shuffle(race_gender_pools[race][gender])
+        
         namesList = []
-        random.shuffle(whiteNames)
-        random.shuffle(hispanicNames)
-        random.shuffle(blackNames)
-        random.shuffle(asianNames)
-        for i in range(int(movies_count*raceProbabilities['White']/100)+1):
-            namesList.append(whiteNames[i])
-        for i in range(int(movies_count*raceProbabilities['Hispanic']/100)+1):
-            namesList.append(hispanicNames[i])
-        for i in range(int(movies_count*raceProbabilities['Black']/100)+1):
-            namesList.append(blackNames[i])
-        for i in range(int(movies_count*raceProbabilities['Asian']/100)):
-            namesList.append(asianNames[i])
+        used_names = set()
+        race_counts = {'White': 0, 'Hispanic': 0, 'Black': 0, 'Asian': 0}
+        gender_counts = {'Female': 0, 'Male': 0}
+        
+        # New strategy: Race distribution first, then gender balance
+        # Step 1: Fill race quotas first
+        race_targets = {
+            'White': white_target,
+            'Hispanic': hispanic_target, 
+            'Black': black_target,
+            'Asian': asian_target
+        }
+        
+
+        
+        # For each race, select names trying to maintain gender balance but prioritizing race quotas
+        for race, target_count in race_targets.items():
+            if target_count <= 0:
+                continue
+                
+            # Get all available names for this race
+            available_names = race_gender_pools[race]['Female'] + race_gender_pools[race]['Male']
+            random.shuffle(available_names)
+            
+            # Try to maintain 60/40 gender split within this race, but be flexible
+            desired_female_count = min(int(target_count * 0.6), len(race_gender_pools[race]['Female']))
+            desired_male_count = target_count - desired_female_count
+            
+            # If we don't have enough males, take more females
+            if desired_male_count > len(race_gender_pools[race]['Male']):
+                actual_male_count = len(race_gender_pools[race]['Male'])
+                desired_female_count = min(target_count - actual_male_count, len(race_gender_pools[race]['Female']))
+                desired_male_count = target_count - desired_female_count
+            
+            # Select females first
+            female_selected = 0
+            for candidate in race_gender_pools[race]['Female']:
+                if female_selected >= desired_female_count:
+                    break
+                name_key = (candidate['fname'], candidate['lname'], candidate['gender'])
+                if name_key not in used_names:
+                    namesList.append(candidate)
+                    used_names.add(name_key)
+                    race_counts[race] += 1
+                    gender_counts['Female'] += 1
+                    female_selected += 1
+            
+            # Select males
+            male_selected = 0
+            for candidate in race_gender_pools[race]['Male']:
+                if male_selected >= desired_male_count:
+                    break
+                name_key = (candidate['fname'], candidate['lname'], candidate['gender'])
+                if name_key not in used_names:
+                    namesList.append(candidate)
+                    used_names.add(name_key)
+                    race_counts[race] += 1
+                    gender_counts['Male'] += 1
+                    male_selected += 1
+            
+            # If we still need more names for this race (shouldn't happen with our data), 
+            # take whatever is available
+            still_needed = target_count - (female_selected + male_selected)
+            if still_needed > 0:
+                for candidate in available_names:
+                    if still_needed <= 0:
+                        break
+                    name_key = (candidate['fname'], candidate['lname'], candidate['gender'])
+                    if name_key not in used_names:
+                        namesList.append(candidate)
+                        used_names.add(name_key)
+                        race_counts[race] += 1
+                        gender_counts[candidate['gender']] += 1
+                        still_needed -= 1
+        
+        # Step 2: Check if we have the right total (should be exactly movies_count)
+        if len(namesList) != total_names_needed:
+            print(f'Warning: Expected {total_names_needed} names, got {len(namesList)}')
+        
+        # Step 3: Optional gender rebalancing if we're way off target
+        # (This is a small adjustment, race distribution takes priority)
+        current_female_pct = gender_counts['Female'] / len(namesList) * 100 if namesList else 0
+        target_female_pct = 60
+        if abs(current_female_pct - target_female_pct) > 10:  # If more than 10% off
+            print(f'Note: Gender distribution is {current_female_pct:.1f}% female, target was {target_female_pct}%')
+        
+        print(f'Selected names by race: {race_counts["White"]} White ({race_counts["White"]/len(namesList)*100:.1f}%), '
+              f'{race_counts["Hispanic"]} Hispanic ({race_counts["Hispanic"]/len(namesList)*100:.1f}%), '
+              f'{race_counts["Black"]} Black ({race_counts["Black"]/len(namesList)*100:.1f}%), '
+              f'{race_counts["Asian"]} Asian ({race_counts["Asian"]/len(namesList)*100:.1f}%)')
+        print(f'Selected names by gender: {gender_counts["Female"]} Female ({gender_counts["Female"]/len(namesList)*100:.1f}%), '
+              f'{gender_counts["Male"]} Male ({gender_counts["Male"]/len(namesList)*100:.1f}%)')
+        
         random.shuffle(namesList)
         image_sets = createFacesPattern(namesList)
         user_instance = UserPattern.objects.create(
@@ -240,7 +364,7 @@ def createUserMovieNamePattern(id,timed):
             movie_index = 0,
             names_index = 0,
         )
-        print('User created')
+        print('User created with unique names')
     except Exception as e:
         print(e)
 
