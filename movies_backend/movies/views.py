@@ -187,7 +187,7 @@ random.shuffle(blackNames)
 random.shuffle(asianNames)
 
 # onlyfiles = [f for f in listdir(images_path) if isfile(join(images_path, f))]
-pattern = '_#\d*_'
+pattern = r'_#\d*_'
 exclude_files = [8,41,37,79,80,95,98,111,104,125,140,153,144,143,154,163,177,194,221,256,271,280,287,288,300,313,314,315,320,321,333,350]
 
 def createFacesPattern(namesList):
