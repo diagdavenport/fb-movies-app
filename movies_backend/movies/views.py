@@ -374,7 +374,7 @@ def getImage(request, data):
     fname = Fname.objects.filter(first_name=first_name)[0]
     race = fname.race.lower()
     setFaces = []
-    pattern = '_#'+str(index)+'_'
+    pattern = r'_#'+str(index)+r'_'
     for f in onlyfiles:
         if pattern in f:
             if race in f:
