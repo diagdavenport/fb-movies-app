@@ -53,16 +53,9 @@ export class SurveyComponent implements OnInit {
     this.review_heading = this.names[this.review_index]['fname']+' '+this.names[this.review_index]['lname']+"'s review of "+this.movies[this.review_index]['title'];
   }
   add(i): void {
-    if (this.movies_count == this.target_movie_count){
-      const modal = this.modalService.warning({
-        nzTitle: 'You have already selected '+this.target_movie_count+' movies, remove a selection or Submit',
-        nzContent: ''
-      });
-    }
-    else{
+    // Both timers allow unlimited selection during browsing
       this.movies_selected[i] = !this.movies_selected[i];
       this.movies_count++;
-    }
   }
   remove(i): void {
     this.movies_selected[i] = !this.movies_selected[i];
@@ -92,6 +85,23 @@ export class SurveyComponent implements OnInit {
   }
 
   timeup() {
+    // Both timers validate exactly 5 movies
+    if (this.movies_count < 5) {
+      const modal = this.modalService.warning({
+        nzTitle: `You need to select 5 movies in total. You currently have selected ${this.movies_count}. Please select ${5 - this.movies_count} more.`,
+        nzContent: ''
+      });
+      return; // Don't proceed to submission
+    }
+    if (this.movies_count > 5) {
+      const modal = this.modalService.warning({
+        nzTitle: `You selected ${this.movies_count} movies. You need to select 5 in total. Please remove ${this.movies_count - 5}.`,
+        nzContent: ''
+      });
+      return; // Don't proceed to submission
+    }
+
+    // Original timeup logic - only execute if validation passes
     var survey_data: any = {};
       survey_data['user_id'] = this.user_id;
       survey_data['movie_data'] = this.movies.slice(0, this.movies_index);
@@ -171,53 +181,16 @@ export class SurveyComponent implements OnInit {
   }
   submit() {
     console.log(this.movies_selected);
-    if (this.time_choice == true){
-      if (this.movies_count < 1){
+    // Both timers require exactly 5 movies
+    if (this.movies_count < 5){
         const modal = this.modalService.warning({
-          nzTitle: 'You have not selected any movies, please select atleast 1 movie to Submit',
+        nzTitle: `Please make sure to select 5 movies. You have currently selected only ${this.movies_count}.`,
           nzContent: ''
         });
       }
-      // if (this.movies_count < this.target_movie_count){
-      //   const modal = this.modalService.warning({
-      //     nzTitle: 'You have not selected '+this.target_movie_count+' movies, please select '+this.target_movie_count+' movies to Submit',
-      //     nzContent: ''
-      //   });
-      // }
-      else{
-        var survey_data: any = {};
-        survey_data['user_id'] = this.user_id;
-        survey_data['movie_data'] = this.movies.slice(0, this.movies_index);
-        survey_data['movies_reviewed'] = this.movies_reviewed;
-        survey_data['time_choice'] = this.time_choice;
-        survey_data['name_data'] = this.names.slice(0, this.names_index);
-        survey_data['movies_selected'] = this.movies_selected;
-        var date = new Date();
-        survey_data['timestamp'] = date.toISOString();
-        this.surveyService.postSurveyData(survey_data).subscribe({
-          next: data =>{}
-        }); 
-        var movie_links = [];
-        for(var i in this.movies_selected){
-            if (this.movies_selected[i] == true){
-                movie_links.push(this.movies[parseInt(i)]['link']);
-            }
-        }
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            "time_choice":this.time_choice,
-            "user_id":this.user_id,
-            "movie_links":movie_links,
-          },
-          skipLocationChange: true,
-        };
-        this.router.navigate(['/info'],navigationExtras);
-      }
-    }
-    else{
-      if (this.movies_count < this.target_movie_count){
+    else if (this.movies_count > 5){
         const modal = this.modalService.warning({
-          nzTitle: 'You have not selected '+this.target_movie_count+' movies, please select '+this.target_movie_count+' movies to Submit',
+        nzTitle: `You selected ${this.movies_count} movies. You need to select 5 in total. Please remove ${this.movies_count - 5}.`,
           nzContent: ''
         });
       }
@@ -249,7 +222,6 @@ export class SurveyComponent implements OnInit {
           skipLocationChange: true,
         };
         this.router.navigate(['/info'],navigationExtras);
-      }
     }
   }
   fetchImg(data) {
