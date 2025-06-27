@@ -18,7 +18,7 @@ urlpatterns = [
     url(r'^getmovies/',views.getMovies),
     url(r'^getfaces/',views.getFaces),
     # url(r'^getmoviescount/',views.getMoviesCount),
-    url(r'^getfnamescount/',views.getFNamesCount),
+    # url(r'^getfnamescount/',views.getFNamesCount),
     url(r'^getdynamics/',views.getDynamics),
     path("getimage/<data>/",views.getImage, name="data"),
     url(r'^createfnames/',views.createFnames),
