@@ -142,3 +142,5 @@ dist
 
 # TernJS port file
 .tern-port
+
+!movies_backend/selected_faces.csv
