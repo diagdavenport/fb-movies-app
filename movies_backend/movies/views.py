@@ -18,10 +18,9 @@ IPs = []
 
 # Local
 # images_path = "M:/MS_STUDY/RA/MOVIE/selected gan faces/"
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 csv_path = os.path.join(BASE_DIR, 'selected_faces.csv')
-
-df = pd.read_csv(os.path.join(BASE_DIR, 'selected_faces.csv'))
+df = pd.read_csv(csv_path)
 #df = pd.read_csv('selected_faces.csv',usecols=['face_number','type'])
 
 # images_path = "/home/ubuntu/MOVIES/selected_images/"
