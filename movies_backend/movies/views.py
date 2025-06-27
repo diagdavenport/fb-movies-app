@@ -165,7 +165,7 @@ def postUserInfo(data):
         return JsonResponse('Post Info Failed',safe=False)
   
 
-movies_count = len(Movie.objects.all())
+#movies_count = len(Movie.objects.all())
 fnames_count = len(Fname.objects.all())
 whiteNames = []
 hispanicNames = []
