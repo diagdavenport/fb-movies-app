@@ -21,7 +21,7 @@ IPs = []
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 csv_path = os.path.join(BASE_DIR, 'selected_faces.csv')
 
-df = pd.read_csv(csv_path, usecols=['face_number', 'type'])
+df = pd.read_csv(os.path.join(BASE_DIR, 'selected_faces.csv'))
 #df = pd.read_csv('selected_faces.csv',usecols=['face_number','type'])
 
 # images_path = "/home/ubuntu/MOVIES/selected_images/"
