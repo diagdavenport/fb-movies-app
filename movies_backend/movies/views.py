@@ -165,31 +165,31 @@ def postUserInfo(data):
         return JsonResponse('Post Info Failed',safe=False)
   
 
-#movies_count = len(Movie.objects.all())
-#fnames_count = len(Fname.objects.all())
+movies_count = len(Movie.objects.all())
+fnames_count = len(Fname.objects.all())
 whiteNames = []
 hispanicNames = []
 blackNames = []
 asianNames = []
-# for fname in Fname.objects.all():
-#     first_name = model_to_dict(fname)['first_name']
-#     race = model_to_dict(fname)['race']
-#     gender = model_to_dict(fname)['gender']
-#     lnames = list(Lname.objects.filter(race=race))
-#     for lname in lnames:
-#         last_name = model_to_dict(lname)['last_name']
-#         if race == 'White':
-#             whiteNames.append({"fname":first_name,"lname":last_name,"race":'white',"gender":gender})
-#         elif race == 'Black':
-#             blackNames.append({"fname":first_name,"lname":last_name,"race":'black',"gender":gender})
-#         elif race == 'Hispanic':
-#             hispanicNames.append({"fname":first_name,"lname":last_name,"race":'hispanic',"gender":gender})
-#         else:
-#             asianNames.append({"fname":first_name,"lname":last_name,"race":'asian',"gender":gender})
-# random.shuffle(whiteNames)
-# random.shuffle(hispanicNames)
-# random.shuffle(blackNames)
-# random.shuffle(asianNames)
+for fname in Fname.objects.all():
+    first_name = model_to_dict(fname)['first_name']
+    race = model_to_dict(fname)['race']
+    gender = model_to_dict(fname)['gender']
+    lnames = list(Lname.objects.filter(race=race))
+    for lname in lnames:
+        last_name = model_to_dict(lname)['last_name']
+        if race == 'White':
+            whiteNames.append({"fname":first_name,"lname":last_name,"race":'white',"gender":gender})
+        elif race == 'Black':
+            blackNames.append({"fname":first_name,"lname":last_name,"race":'black',"gender":gender})
+        elif race == 'Hispanic':
+            hispanicNames.append({"fname":first_name,"lname":last_name,"race":'hispanic',"gender":gender})
+        else:
+            asianNames.append({"fname":first_name,"lname":last_name,"race":'asian',"gender":gender})
+random.shuffle(whiteNames)
+random.shuffle(hispanicNames)
+random.shuffle(blackNames)
+random.shuffle(asianNames)
 
 # onlyfiles = [f for f in listdir(images_path) if isfile(join(images_path, f))]
 pattern = r'_#\d*_'
@@ -463,13 +463,13 @@ def getMovies(data):
 def getDynamics(request):
     return JsonResponse(model_to_dict(Dynamic.objects.first()),safe=False)
 
-# @api_view(["GET"])
-# def getMoviesCount(request):
-#     return JsonResponse(len(Movie.objects.all()),safe=False)
+@api_view(["GET"])
+def getMoviesCount(request):
+    return JsonResponse(len(Movie.objects.all()),safe=False)
 
-# @api_view(["GET"])
-# def getFNamesCount(request):
-#     return JsonResponse(len(Fname.objects.all()),safe=False)
+@api_view(["GET"])
+def getFNamesCount(request):
+    return JsonResponse(len(Fname.objects.all()),safe=False)
 
 @api_view(["GET"])
 def createFnames(request):
