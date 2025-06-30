@@ -52,18 +52,32 @@ export class SurveyComponent implements OnInit {
     this.review_index = i;
     this.review_heading = this.names[this.review_index]['fname']+' '+this.names[this.review_index]['lname']+"'s review of "+this.movies[this.review_index]['title'];
   }
-  add(i): void {
-    if (this.movies_count == this.target_movie_count){
-      const modal = this.modalService.warning({
-        nzTitle: 'You have already selected '+this.target_movie_count+' movies, remove a selection or Submit',
-        nzContent: ''
-      });
-    }
-    else{
-      this.movies_selected[i] = !this.movies_selected[i];
-      this.movies_count++;
+
+  // Helper function to validate exact movie count
+  private validateMovieCount(): { isValid: boolean, message: string } {
+    const difference = this.target_movie_count - this.movies_count;
+    
+    if (this.movies_count === this.target_movie_count) {
+      return { isValid: true, message: '' };
+    } else if (this.movies_count < this.target_movie_count) {
+      return { 
+        isValid: false, 
+        message: `Please select ${difference} more movie${difference > 1 ? 's' : ''} (${this.movies_count}/${this.target_movie_count} selected)` 
+      };
+    } else {
+      return { 
+        isValid: false, 
+        message: `Please deselect ${-difference} movie${-difference > 1 ? 's' : ''} (${this.movies_count}/${this.target_movie_count} selected)` 
+      };
     }
   }
+
+  add(i): void {
+    // Remove the selection limit - allow unlimited selection during browsing
+    this.movies_selected[i] = !this.movies_selected[i];
+    this.movies_count++;
+  }
+
   remove(i): void {
     this.movies_selected[i] = !this.movies_selected[i];
     this.movies_count--;
@@ -92,6 +106,20 @@ export class SurveyComponent implements OnInit {
   }
 
   timeup() {
+    // Validate exact movie count before proceeding
+    const validation = this.validateMovieCount();
+    
+    if (!validation.isValid) {
+      const modal = this.modalService.warning({
+        nzTitle: 'Time Up - Selection Required',
+        nzContent: validation.message + '. Please adjust your selection before proceeding.',
+        nzOnOk: () => {
+          // Don't navigate - let user adjust their selection
+        }
+      });
+      return; // Stop execution - don't navigate
+    }
+
     var survey_data: any = {};
       survey_data['user_id'] = this.user_id;
       survey_data['movie_data'] = this.movies.slice(0, this.movies_index);
@@ -171,86 +199,50 @@ export class SurveyComponent implements OnInit {
   }
   submit() {
     console.log(this.movies_selected);
-    if (this.time_choice == true){
-      if (this.movies_count < 1){
-        const modal = this.modalService.warning({
-          nzTitle: 'You have not selected any movies, please select atleast 1 movie to Submit',
-          nzContent: ''
-        });
-      }
-      // if (this.movies_count < this.target_movie_count){
-      //   const modal = this.modalService.warning({
-      //     nzTitle: 'You have not selected '+this.target_movie_count+' movies, please select '+this.target_movie_count+' movies to Submit',
-      //     nzContent: ''
-      //   });
-      // }
-      else{
-        var survey_data: any = {};
-        survey_data['user_id'] = this.user_id;
-        survey_data['movie_data'] = this.movies.slice(0, this.movies_index);
-        survey_data['movies_reviewed'] = this.movies_reviewed;
-        survey_data['time_choice'] = this.time_choice;
-        survey_data['name_data'] = this.names.slice(0, this.names_index);
-        survey_data['movies_selected'] = this.movies_selected;
-        var date = new Date();
-        survey_data['timestamp'] = date.toISOString();
-        this.surveyService.postSurveyData(survey_data).subscribe({
-          next: data =>{}
-        }); 
-        var movie_links = [];
-        for(var i in this.movies_selected){
-            if (this.movies_selected[i] == true){
-                movie_links.push(this.movies[parseInt(i)]['link']);
-            }
-        }
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            "time_choice":this.time_choice,
-            "user_id":this.user_id,
-            "movie_links":movie_links,
-          },
-          skipLocationChange: true,
-        };
-        this.router.navigate(['/info'],navigationExtras);
-      }
+    
+    // Use consistent validation for both timer types
+    const validation = this.validateMovieCount();
+    
+    if (!validation.isValid) {
+      const modal = this.modalService.warning({
+        nzTitle: 'Invalid Selection',
+        nzContent: validation.message
+      });
+      return; // Stop execution - don't navigate
     }
-    else{
-      if (this.movies_count < this.target_movie_count){
-        const modal = this.modalService.warning({
-          nzTitle: 'You have not selected '+this.target_movie_count+' movies, please select '+this.target_movie_count+' movies to Submit',
-          nzContent: ''
-        });
-      }
-      else{
-        var survey_data: any = {};
-        survey_data['user_id'] = this.user_id;
-        survey_data['movie_data'] = this.movies.slice(0, this.movies_index);
-        survey_data['movies_reviewed'] = this.movies_reviewed;
-        survey_data['time_choice'] = this.time_choice;
-        survey_data['name_data'] = this.names.slice(0, this.names_index);
-        survey_data['movies_selected'] = this.movies_selected;
-        var date = new Date();
-        survey_data['timestamp'] = date.toISOString();
-        this.surveyService.postSurveyData(survey_data).subscribe({
-          next: data =>{}
-        }); 
-        var movie_links = [];
-        for(var i in this.movies_selected){
-            if (this.movies_selected[i] == true){
-                movie_links.push(this.movies[parseInt(i)]['link']);
-            }
+
+    // Proceed with submission if validation passes
+    var survey_data: any = {};
+    survey_data['user_id'] = this.user_id;
+    survey_data['movie_data'] = this.movies.slice(0, this.movies_index);
+    survey_data['movies_reviewed'] = this.movies_reviewed;
+    survey_data['time_choice'] = this.time_choice;
+    survey_data['name_data'] = this.names.slice(0, this.names_index);
+    survey_data['movies_selected'] = this.movies_selected;
+    var date = new Date();
+    survey_data['timestamp'] = date.toISOString();
+    
+    this.surveyService.postSurveyData(survey_data).subscribe({
+      next: data =>{}
+    }); 
+    
+    var movie_links = [];
+    for(var i in this.movies_selected){
+        if (this.movies_selected[i] == true){
+            movie_links.push(this.movies[parseInt(i)]['link']);
         }
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            "time_choice":this.time_choice,
-            "user_id":this.user_id,
-            "movie_links":movie_links,
-          },
-          skipLocationChange: true,
-        };
-        this.router.navigate(['/info'],navigationExtras);
-      }
     }
+    
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        "time_choice":this.time_choice,
+        "user_id":this.user_id,
+        "movie_links":movie_links,
+      },
+      skipLocationChange: true,
+    };
+    
+    this.router.navigate(['/info'],navigationExtras);
   }
   fetchImg(data) {
     const mediaType = 'application/image';
